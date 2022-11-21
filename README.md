@@ -143,4 +143,4 @@ Amadeus can send welcome messages to the server whenever a new member joins the 
 
 #### Doing this project really helped me learn a lot of  new things which will surely be of great use to me in the future! It also helped improve the fundamentals of python. Developing Amadeus has been a great experience and I'll continue working on it and make improvement in it as I get acquainted with new technologies.
 
-#### I give my thanks to all the people who have helped me develop this bot.
+#### I give my thanks to all the people who have helped me develop this bot especially @MeltingDiamond.
