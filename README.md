@@ -6,7 +6,8 @@ Along the way, I added some extra features to Amadeus so it can do much more tha
 Some useful functions like translation, QRcode generator, and anime search are also available in this bot to help the user.
 I've deployed this bot using Daki, a free bot hosting service (https://daki.cc/). The source code is available on GitHub at (https://github.com/Om-Alve/Amadeus).  
 I'll now tell you the use of each file in the source code:
-* main.py: This file contains all the commands and contains all the primary code which runs the bot. 
+* main.py: This file contains all the commands and contains all the primary code which runs the bot.
+* env.py contains the bot token and other important variables which should be kept a secret. 
 * random_responses.py: This file contains the functions which control the chatbot feature of the bot.
 * bots.json: This JSON file contains various keywords to search in the input message and their respective response. 
 * requirements.txt contains a list of all the required dependencies to run this project.
