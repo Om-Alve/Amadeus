@@ -1,0 +1,68 @@
+[
+    {
+      "response_type": "greeting",
+      "user_input": ["hello", "hi", "hey"],
+      "bot_response": "Hey there!",
+      "required_words": []
+    },
+    {
+      "response_type": "greeting",
+      "user_input": ["see you", "goodbye", "bye"],
+      "bot_response": "See you later!",
+      "required_words": []
+    },
+    {
+      "response_type": "greeting",
+      "user_input": ["nice", "to", "meet", "you"],
+      "bot_response": "The pleasure is all mine!",
+      "required_words": ["nice", "meet", "you"]
+    },
+    {
+      "response_type": "question",
+      "user_input": ["how", "to", "learn", "code", "coding", "apps"],
+      "bot_response": "Start by typing: 'How to learn coding' on Google.",
+      "required_words": ["learn", "code"]
+    },
+    {
+      "response_type": "question",
+      "user_input": ["refund", "how", "can", "I", "get"],
+      "bot_response": "We don't offer refunds for free education.",
+      "required_words": ["refund", "i"]
+    },
+    {
+      "response_type": "question",
+      "user_input": ["how", "are", "you"],
+      "bot_response": "I'm great! Thanks for asking.",
+      "required_words": ["how", "are", "you"]
+    },
+    {
+        "response_type": "question",
+        "user_input": ["what", "is", "your","name"],
+        "bot_response": "I'm Sondeep MaheshWhori (a ripoff of Sandeep Maheshwari) , a bot made by Om Alve.",
+        "required_words": ["name", "your", "what","is"]
+    },
+    {
+        "response_type": "question",
+        "user_input": ["are", "you", "a","robot"],
+        "bot_response": "Yes I'm a robot but I'm a smart one!",
+        "required_words": ["are", "you","robot","bot"]
+    },
+    {
+      "response_type": "question",
+      "user_input": ["aye", "kya", "bolti","tu"],
+      "bot_response": "Kya mai bolu?",
+      "required_words": ["aye", "kya", "bolti","tu"]
+    },
+    {
+      "response_type": "question",
+      "user_input": ["sun"],
+      "bot_response": "Suna",
+      "required_words": ["sun"]
+    },
+    {
+      "response_type": "question",
+      "user_input": ["aati","kya","khandala"],
+      "bot_response": "Chal hatt be Saste Aamir Khan",
+      "required_words": ["aati","kya","khandala"]
+    }
+  ]
