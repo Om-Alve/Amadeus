@@ -51,7 +51,8 @@ reddit = praw.Reddit(client_id=id,
 def check_queue(ctx):
     if len(queues) > 1:
         source = queues[1]
-        asyncio.get_event_loop().create_task(ctx.send(
+        channel = client.get_channel(886964805783662613)
+        client.loop.create_task(channel.send(
             f'```Now playing... \n{titles[1]}```'))
         queues.pop(0)
         titles.pop(0)
@@ -61,19 +62,21 @@ def check_queue(ctx):
     else:
         queues.clear()
         titles.clear()
-        asyncio.get_event_loop().create_task(ctx.send("There are no songs in the queue"))
+        channel = client.get_channel(886964805783662613)
+        client.loop.create_task(channel.send(
+            f'```There are no songs in the queue```'))
 
 # Indicates whether the bot is ready or not
 
 
-@client.event
+@ client.event
 async def on_ready():
     print('I am ready!')
 
 # Send random quote
 
 
-@client.command()
+@ client.command()
 async def inspire(ctx):
     quote = Quotes().random()
     await ctx.send(quote[1] + "    -" + quote[0])
@@ -81,7 +84,7 @@ async def inspire(ctx):
 # Member join message
 
 
-@client.event
+@ client.event
 async def on_member_join(member):
     channel = client.get_channel(791294669577388073)
     background = Editor("pic1.jpg")
@@ -103,7 +106,7 @@ async def on_member_join(member):
 # Member leave message
 
 
-@client.event
+@ client.event
 async def on_member_leave(member):
     channel = client.get_channel(791294669577388073)
     embed = discord.Embed(title="Goodbye!",
@@ -113,7 +116,7 @@ async def on_member_leave(member):
 # Simulate a coin toss
 
 
-@client.command()
+@ client.command()
 async def toss(ctx):
     n = random.randint(-1, 2)
     if n == 0:
@@ -124,7 +127,7 @@ async def toss(ctx):
 # Send a random number from given range
 
 
-@client.command()
+@ client.command()
 async def roll(ctx, arg):
     try:
         n = int(arg)
@@ -140,7 +143,7 @@ async def roll(ctx, arg):
 # Send a random compliment
 
 
-@client.command()
+@ client.command()
 async def compliment(ctx):
     compliment = requests.get("https://complimentr.com/api").text
     compliment = json.loads(compliment)
@@ -149,7 +152,7 @@ async def compliment(ctx):
 # Send a random activity to do
 
 
-@client.command()
+@ client.command()
 async def bored(ctx):
     activity = requests.get("http://www.boredapi.com/api/activity/").text
     activity = json.loads(activity)
@@ -158,7 +161,7 @@ async def bored(ctx):
 # Send random joke
 
 
-@client.command()
+@ client.command()
 async def joke(ctx):
     response = requests.get(
         "https://v2.jokeapi.dev/joke/Any?type=single").text
@@ -168,7 +171,7 @@ async def joke(ctx):
 # Send random fact
 
 
-@client.command()
+@ client.command()
 async def fact(ctx):
     limit = 1
     api_url = 'https://api.api-ninjas.com/v1/facts?limit={}'.format(limit)
@@ -183,7 +186,7 @@ async def fact(ctx):
 # Send random meme
 
 
-@client.command()
+@ client.command()
 async def meme(ctx):
     memes_submissions = reddit.subreddit('memes').new()
     post_to_pick = random.randint(1, 100)
@@ -195,7 +198,7 @@ async def meme(ctx):
 # QR code generator
 
 
-@client.command()
+@ client.command()
 async def qrcode(ctx, *, url):
     image = requests.get(
         f"http://api.qrserver.com/v1/create-qr-code/?data={url}")
@@ -204,14 +207,14 @@ async def qrcode(ctx, *, url):
 # Translator
 
 
-@client.command()
+@ client.command()
 async def translate(ctx, lang, *, text):
     translator = Translator()
     translation = translator.translate(text, dest=lang)
     await ctx.send(translation.text)
 
 
-@client.command()
+@ client.command()
 async def anime(ctx, *, name):
     anilist = Anilist()
     data = anilist.get_anime(name)
@@ -350,9 +353,13 @@ async def on_voice_state_update(member, before, after):
 
 
 @client.command(pass_context=True)
-async def play(ctx, *, search):
+async def play(ctx, *, search=None):
     if not ctx.voice_client:
-        await ctx.send("You aren't connected to a voice channel!")
+        await ctx.send("I'm not connected to a voice channel!")
+        return
+    if not search:
+        await ctx.send("Please enter the name or url of the song to be played!")
+        return
     FFMPEG_OPTIONS = {
         'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
     YDL_OPTIONS = {'format': 'bestaudio/best',
