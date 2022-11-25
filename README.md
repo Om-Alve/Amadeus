@@ -1,5 +1,6 @@
 # Amadeus
-## Amadeus is a multi-functional discord bot made by me using python and discord.py.  
+## Amadeus is a multi-functional discord bot made by me using python and discord.py. 
+#### Video Demo: https://youtu.be/QFZ-m3IjSAc
 I got inspired to make this bot after the music bot 'rhythm' which I used to play music with in my discord server got shut down.
 During this time I had been searching for ideas for the final project so I thought why not make a discord bot using the knowledge I gained from CS50? and this is how Amadeus was born!
 Along the way, I added some extra features to Amadeus so it can do much more than stream music!
