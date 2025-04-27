@@ -80,7 +80,7 @@ def train_epoch(epoch, wandb):
 
 def init_model(lm_config: AmadeusConfig):
     tokenizer = AutoTokenizer.from_pretrained("../model/")
-    model = AmadeusForCausalLM(lm_config)
+    model = AmadeusForCausalLM(lm_config).to(args.device)
     Logger(f"Model loaded with {sum(p.numel() for p in model.parameters()) / 1e6:.2f}M parameters")
     return model, tokenizer
 
@@ -99,7 +99,6 @@ def init_distributed_mode():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Pretrain Amadeus")
     parser.add_argument("--out_dir", type=str, default="../out")
-    # To achieve zero in the fastest way, set epochs to 1 round; otherwise, train for 2~6 epochs using the limited data.
     parser.add_argument("--epochs", type=int, default=1)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--learning_rate", type=float, default=5e-4)
@@ -151,8 +150,6 @@ if __name__ == "__main__":
     if args.use_wandb and (not ddp or dist.get_rank() == 0):
         import wandb
         wandb.init(project=args.wandb_project, name=args.wandb_run_name, config=args)
-        import wandb
-        wandb.init(project=args.wandb_project, name=args.wandb_run_name)
     else:
         wandb = None
 
