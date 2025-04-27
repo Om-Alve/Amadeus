@@ -1,4 +1,4 @@
- from transformers import PretrainedConfig
+from transformers import PretrainedConfig
 
  class AmadeusConfig(PretrainedConfig):
      model_type = "amadeus"
