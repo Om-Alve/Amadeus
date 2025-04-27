@@ -1,7 +1,11 @@
-from model.model import AmadeusForCausalLM
+import sys
+import os
 import torch
 import warnings
 from transformers import AutoTokenizer
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from model.model import AmadeusConfig, AmadeusForCausalLM 
 
 warnings.filterwarnings('ignore')

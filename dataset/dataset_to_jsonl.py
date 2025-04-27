@@ -1,3 +1,4 @@
+import os
 import time
 from datasets import load_dataset
 import logging
@@ -6,7 +7,7 @@ NUM_CPUS = max(1, os.cpu_count() - 2)
 
 DATASET_NAME = "HuggingFaceTB/cosmopedia"
 CONFIG_NAME = "stories"
-SPLIT = "train"
+SPLIT = "train[:10%]"
 OUTPUT_FILENAME = "cosmopedia_stories.jsonl"
 COLUMN_TO_EXPORT = "text"
 
