@@ -165,7 +165,7 @@ if __name__ == "__main__":
         pin_memory=True,
         drop_last=False,
         shuffle=False,
-        num_works=args.num_workers,
+        num_workers=args.num_workers,
         sampler=train_sampler
     )
 
