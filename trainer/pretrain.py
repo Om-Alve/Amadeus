@@ -60,10 +60,10 @@ def train_epoch(epoch, writer):
 
             optimizer.zero_grad(set_to_none=True)
 
-        if step % args.log_interval == 0:
+        if step % args.log_interval == 0 and step != 0:
             spent_time = time.time() - start_time
             Logger(
-    f"Epoch: {epoch + 1} / {args.epochs} | step {step + 1} / {iters_per_epoch} | loss: {loss.item() * args.accumulation_steps} | lr: {lr} | time: {spent_time:.2f}s"
+    f"Epoch: {epoch + 1} / {args.epochs} | Step: {step} / {iters_per_epoch} | Loss: {(loss.item() * args.accumulation_steps):.4f} | LR: {lr:.6f} | Time: {spent_time:.2f}s"
             )
             if (writer is not None) and (not ddp or dist.get_rank() == 0):
                 global_step = epoch * iters_per_epoch + step
