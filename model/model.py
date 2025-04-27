@@ -122,7 +122,7 @@ class Attention(nn.Module):
         return output, past_kv
 
 class FeedForward(nn.Module):
-    def __init__(self, config: MiniMindConfig):
+    def __init__(self, config: AmadeusConfig):
         super().__init__()
         if config.intermediate_size is None:
             intermediate_size = int(config.hidden_size * 8 / 3)
