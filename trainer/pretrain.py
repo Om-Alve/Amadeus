@@ -83,6 +83,7 @@ def init_model(lm_config: AmadeusConfig):
     tokenizer = AutoTokenizer.from_pretrained("../model/")
     model = AmadeusForCausalLM(lm_config).to(args.device)
     Logger(f"Model loaded with {sum(p.numel() for p in model.parameters()) / 1e6:.2f}M parameters")
+    Logger(f"Tokens per iteration: {tokens_per_iter}")
     return model, tokenizer
 
 def init_distributed_mode():
