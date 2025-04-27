@@ -16,6 +16,7 @@ from contextlib import nullcontext
 from transformers import AutoTokenizer
 from model.model import AmadeusConfig, AmadeusForCausalLM
 from dataset.dataset import PretrainDataset
+from torch.utils.tensorboard.writer import SummaryWriter
 
 warnings.filterwarnings('ignore')
 
@@ -27,7 +28,7 @@ def get_lr(current_step, total_steps, lr):
     return lr / 10 + 0.5 * lr * (1 + math.cos(math.pi * current_step / total_steps))
 
 
-def train_epoch(epoch, wandb):
+def train_epoch(epoch, writer):
     loss_fnc = nn.CrossEntropyLoss(reduction="none")
     start_time = time.time()
     for step, (X,Y,loss_mask) in enumerate(train_loader):
@@ -64,8 +65,10 @@ def train_epoch(epoch, wandb):
             Logger(
     f"Epoch: {epoch + 1} / {args.epochs} | step {step + 1} / {iters_per_epoch} | loss: {loss.item() * args.accumulation_steps} | lr: {lr} | time: {spent_time:.2f}s"
             )
-            if (wandb is not None) and (not ddp or dist.get_rank() == 0):
-                wandb.log({"loss": loss.item() * args.accumulation_steps, "lr": lr}, step=epoch * iters_per_epoch + step)
+            if (writer is not None) and (not ddp or dist.get_rank() == 0):
+                global_step = epoch * iters_per_epoch + step
+                writer.add_scalar("loss", loss.item() * args.accumulation_steps, global_step)
+                writer.add_scalar("lr", lr, global_step)
             start_time = time.time()
 
         if step % args.save_interval == 0 and (not ddp or dist.get_rank() == 0):
@@ -106,8 +109,7 @@ if __name__ == "__main__":
     parser.add_argument("--learning_rate", type=float, default=5e-4)
     parser.add_argument("--device", type=str, default="cuda:0" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--dtype", type=str, default="bfloat16")
-    parser.add_argument("--use_wandb", action="store_true")
-    parser.add_argument("--wandb_project", type=str, default="Amadeus-Pretrain")
+    parser.add_argument("--use_tb", action="store_true")
     parser.add_argument("--num_workers", type=int, default=1)
     parser.add_argument("--ddp", action="store_true")
     parser.add_argument("--accumulation_steps", type=int, default=8)
@@ -129,8 +131,6 @@ if __name__ == "__main__":
     tokens_per_iter = args.batch_size * args.max_seq_len
     device_type = "cuda" if "cuda" in args.device else "cpu"
 
-    args.wandb_run_name = f"Amadeus-Pretrain-Epoch-{args.epochs}-Batch-{args.batch_size}-LR-{args.learning_rate}-MaxLen-{args.max_seq_len}"
-
     ctx = nullcontext() if device_type == "cpu" else torch.cuda.amp.autocast()
 
     ddp = int(os.environ.get("RANK", 1)) != -1
@@ -149,11 +149,11 @@ if __name__ == "__main__":
         torch.manual_seed(base_seed + rank)
         torch.cuda.manual_seed(base_seed + rank)
 
-    if args.use_wandb and (not ddp or dist.get_rank() == 0):
-        import wandb
-        wandb.init(project=args.wandb_project, name=args.wandb_run_name, config=args)
+    if args.use_tb and (not ddp or dist.get_rank() == 0):
+        os.makedirs("../tensorboard-logs", exist_ok=True)
+        writer = SummaryWriter(log_dir="../tensorboard-logs")
     else:
-        wandb = None
+        writer = None
 
     model, tokenizer = init_model(lm_config)
     train_ds = PretrainDataset(args.data_path, tokenizer, args.max_seq_len)
@@ -176,5 +176,5 @@ if __name__ == "__main__":
 
     iters_per_epoch = len(train_loader)
     for epoch in range(args.epochs):
-        train_epoch(epoch, wandb)
+        train_epoch(epoch, writer)
 
