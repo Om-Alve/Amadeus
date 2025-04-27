@@ -1,7 +1,8 @@
+from model.model import AmadeusForCausalLM
 import torch
 import warnings
 from transformers import AutoTokenizer
-from model.model_minimind import MiniMindConfig, MiniMindForCausalLM
+from model.model import AmadeusConfig, AmadeusForCausalLM 
 
 warnings.filterwarnings('ignore')
 
@@ -27,13 +28,13 @@ except Exception as e:
     exit()
 
 print("Initializing model configuration...")
-config = MiniMindConfig(
+config = AmadeusConfig(
     hidden_size=HIDDEN_SIZE,
     num_hidden_layers=NUM_HIDDEN_LAYERS,
 )
 
 print("Initializing model structure...")
-model = MiniMindForCausalLM(config)
+model = AmadeusForCausalLM(config)
 
 print(f"Loading model weights from: {MODEL_CHECKPOINT_PATH}")
 try:
