@@ -10,7 +10,7 @@ class PretrainDataset(Dataset):
         self.dataset_path = dataset_path
         self.tokenizer=tokenizer
         self.max_length = max_length
-        self.samples = self.load_data(data_path)
+        self.samples = self.load_data(dataset_path)
 
     def load_data(self, path):
         samples = []
