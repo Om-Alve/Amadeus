@@ -11,7 +11,7 @@ import torch
 import torch.distributed as dist
 from torch import optim, nn
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, DistributedSampler
 from contextlib import nullcontext
 from transformers import AutoTokenizer
 from model.model import AmadeusConfig, AmadeusForCausalLM
@@ -158,6 +158,7 @@ if __name__ == "__main__":
 
     model, tokenizer = init_model(lm_config)
     train_ds = PretrainDataset(args.data_path, tokenizer, args.max_seq_len)
+    train_sampler = DistributedSampler(train_ds) if ddp else None
     train_loader = DataLoader(
         train_ds,
         batch_size=args.batch_size,
