@@ -11,7 +11,7 @@ import torch
 import torch.distributed as dist
 from torch import optim, nn
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torch.utils.data import Dataloader, DistributedSampler
+from torch.utils.data import DataLoader
 from contextlib import nullcontext
 from transformers import AutoTokenizer
 from model.model import AmadeusConfig, AmadeusForCausalLM
