@@ -1,6 +1,6 @@
 from transformers import PretrainedConfig
 
- class AmadeusConfig(PretrainedConfig):
+class AmadeusConfig(PretrainedConfig):
      model_type = "amadeus"
 
      def __init__(
