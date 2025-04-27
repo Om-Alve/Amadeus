@@ -35,7 +35,7 @@ def train_epoch(epoch, wandb):
         Y = Y.to(args.device)
         loss_mask = loss_mask.to(args.device)
 
-        lr = get_lr(epoch * iter_per_epoch + step, args.epochs * iters_per_epoch, args.lr)
+        lr = get_lr(epoch * iters_per_epoch + step, args.epochs * iters_per_epoch, args.learning_rate)
 
         for param_group in optimizer.param_groups:
             param_group["lr"] = lr
@@ -49,7 +49,7 @@ def train_epoch(epoch, wandb):
             loss = (loss * loss_mask).sum() / loss_mask.sum()
             loss = loss / args.accumulation_steps
 
-        scaler.scale(loss).backwards()
+        scaler.scale(loss).backward()
 
         if (step + 1) % args.accumulation_steps == 0:
             scaler.unscale_(optimizer)
@@ -66,6 +66,7 @@ def train_epoch(epoch, wandb):
             )
             if (wandb is not None) and (not ddp or dist.get_rank() == 0):
                 wandb.log({"loss": loss.item() * args.accumulation_steps, "lr": lr}, step=epoch * iters_per_epoch + step)
+            start_time = time.time()
 
         if step % args.save_interval == 0 and (not ddp or dist.get_rank() == 0):
             model.eval()
