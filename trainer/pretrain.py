@@ -35,7 +35,7 @@ def train_epoch(epoch, wandb):
         Y = Y.to(args.device)
         loss_mask = loss_mask.to(args.device)
 
-        lr = get_lr(epoch * iter_per_epoch + step, args.epoch * iters_per_epoch, args.lr)
+        lr = get_lr(epoch * iter_per_epoch + step, args.epochs * iters_per_epoch, args.lr)
 
         for param_group in optimizer.param_groups:
             param_group["lr"] = lr
@@ -62,7 +62,7 @@ def train_epoch(epoch, wandb):
         if step % args.log_interval == 0:
             spent_time = time.time() - start_time
             Logger(
-    f"Epoch: {epoch + 1} / {args.epoch} | step {step + 1} / {iters_per_epoch} | loss: {loss.item() * args.accumulation_steps} | lr: {lr} | time: {spent_time:.2f}s"
+    f"Epoch: {epoch + 1} / {args.epochs} | step {step + 1} / {iters_per_epoch} | loss: {loss.item() * args.accumulation_steps} | lr: {lr} | time: {spent_time:.2f}s"
             )
             if (wandb is not None) and (not ddp or dist.get_rank() == 0):
                 wandb.log({"loss": loss.item() * args.accumulation_steps, "lr": lr}, step=epoch * iters_per_epoch + step)
@@ -172,7 +172,7 @@ if __name__ == "__main__":
         model._ddp_params_and_buffers_to_ignore = {"pos_cis"}
         model = DDP(model, device_ids=[ddp_local_rank])
 
-    iter_per_epoch = len(train_loader)
+    iters_per_epoch = len(train_loader)
     for epoch in range(args.epochs):
         train_epoch(epoch, wandb)
 
