@@ -5,10 +5,10 @@ import logging
 
 NUM_CPUS = max(1, os.cpu_count() - 2)
 
-DATASET_NAME = "HuggingFaceTB/cosmopedia"
-CONFIG_NAME = "stories"
-SPLIT = "train[:10%]"
-OUTPUT_FILENAME = "cosmopedia_stories.jsonl"
+DATASET_NAME = "HuggingFaceFW/fineweb-edu"
+CONFIG_NAME = "sample-10BT"
+SPLIT = "train"
+OUTPUT_FILENAME = "fineweb-edu-10B.jsonl"
 COLUMN_TO_EXPORT = "text"
 
 logging.basicConfig(level=logging.INFO)

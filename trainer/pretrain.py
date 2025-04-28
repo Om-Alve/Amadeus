@@ -73,7 +73,7 @@ def train_epoch(epoch, writer):
 
         if step % args.save_interval == 0 and (not ddp or dist.get_rank() == 0):
             model.eval()
-            ckp = f"{args.save_dir}/pretrain_{lm_config.hidden_size}.pth"
+            ckp = f"{args.save_dir}/pretrain_{lm_config.hidden_size}-2.pth"
             if isinstance(model, DDP):
                 state_dict = model.module.state_dict()
             else:

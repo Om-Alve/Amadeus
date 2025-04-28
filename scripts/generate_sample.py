@@ -10,7 +10,7 @@ from model.model import AmadeusConfig, AmadeusForCausalLM
 
 warnings.filterwarnings('ignore')
 
-MODEL_CHECKPOINT_PATH = 'out/pretrain_512.pth'
+MODEL_CHECKPOINT_PATH = 'out/pretrain_512-2.pth'
 TOKENIZER_PATH = './model/'
 HIDDEN_SIZE = 512         
 NUM_HIDDEN_LAYERS = 8    
