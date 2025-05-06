@@ -49,7 +49,6 @@ def train_epoch(epoch, wandb):
             ).view(Y.size())
 
             loss = (loss * loss_mask).sum() / loss_mask.sum()
-            loss += res.aux_loss
             loss = loss / args.accumulation_steps
 
         scaler.scale(loss).backward()
@@ -82,8 +81,7 @@ def train_epoch(epoch, wandb):
 
         if (step + 1) % args.save_interval == 0 and (not ddp or dist.get_rank() == 0):
             model.eval()
-            moe_path = '_moe' if lm_config.use_moe else ''
-            ckp = f'{args.save_dir}/full_sft_{lm_config.hidden_size}{moe_path}.pth'
+            ckp = f'{args.save_dir}/full_sft_{lm_config.hidden_size}.pth'
             if isinstance(model, torch.nn.parallel.DistributedDataParallel):
                 state_dict = model.module.state_dict()
             else:
@@ -96,9 +94,9 @@ def train_epoch(epoch, wandb):
 def init_model(lm_config):
     tokenizer = AutoTokenizer.from_pretrained('../model')
     model = AmadeusForCausalLM(lm_config)
-    ckp = f'{args.save_dir}/pretrain_{lm_config.hidden_size}.pth'
-    state_dict = torch.load(ckp, map_location=args.device)
-    model.load_state_dict(state_dict, strict=False)
+    ckp = f'{args.save_dir}/pretrain_{lm_config.hidden_size}-checkpoint.pth'
+    state_dict = torch.load(ckp, map_location=args.device, weights_only=False)
+    model.load_state_dict(state_dict["model"], strict=False)
 
     model = model.to(args.device)
     return model, tokenizer
@@ -117,7 +115,7 @@ def init_distributed_mode():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="MiniMind Full SFT")
+    parser = argparse.ArgumentParser(description="Amadeus Full SFT")
     parser.add_argument("--out_dir", type=str, default="../out")
     parser.add_argument("--epochs", type=int, default=2)
     parser.add_argument("--batch_size", type=int, default=16)
@@ -134,15 +132,14 @@ if __name__ == "__main__":
     parser.add_argument("--log_interval", type=int, default=100)
     parser.add_argument("--save_interval", type=int, default=100)
     parser.add_argument('--local_rank', type=int, default=-1)
-    parser.add_argument('--hidden_size', default=512, type=int)
+    parser.add_argument('--hidden_size', default=768, type=int)
     parser.add_argument('--num_hidden_layers', default=8, type=int)
-    parser.add_argument('--max_seq_len', default=512, type=int)
-    parser.add_argument('--use_moe', default=False, type=bool)
-    parser.add_argument("--data_path", type=str, default="../dataset/sft_mini_512.jsonl")
+    parser.add_argument('--max_seq_len', default=1024, type=int)
+    parser.add_argument("--data_path", type=str, default="../alpaca_cleaned.jsonl")
 
     args = parser.parse_args()
 
-    lm_config = AmadeusConfig(hidden_size=args.hidden_size, num_hidden_layers=args.num_hidden_layer)
+    lm_config = AmadeusConfig(hidden_size=args.hidden_size, num_hidden_layers=args.num_hidden_layers)
     args.save_dir = os.path.join(args.out_dir)
     os.makedirs(args.save_dir, exist_ok=True)
     os.makedirs(args.out_dir, exist_ok=True)
