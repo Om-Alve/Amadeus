@@ -4,18 +4,13 @@ import sys
 __package__ = "trainer"
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-import argparse
-import time
-import math
-import warnings
-import torch
+import argparse, time, math, warnings, torch
 import torch.distributed as dist
 from contextlib import nullcontext
 from torch import optim, nn
 from torch.nn.parallel import DistributedDataParallel
 from torch.utils.data import DataLoader, DistributedSampler
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from model.model import AmadeusForCausalLM, AmadeusConfig
 from dataset.dataset import SFTDataset
 
 warnings.filterwarnings('ignore')
@@ -65,45 +60,37 @@ def train_epoch(epoch, wandb):
         if step % args.log_interval == 0:
             spend_time = time.time() - start_time
             Logger(
-                'Epoch:[{}/{}]({}/{}) loss:{:.3f} lr:{:.12f} epoch_Time:{}min:'.format(
-                    epoch + 1,
-                    args.epochs,
-                    step,
-                    iter_per_epoch,
-                    loss.item() * args.accumulation_steps,
-                    optimizer.param_groups[-1]['lr'],
-                    spend_time / (step + 1) * iter_per_epoch // 60 - spend_time // 60))
-
+                f'Epoch:[{epoch+1}/{args.epochs}]({step}/{iter_per_epoch}) '
+                f'loss:{loss.item()*args.accumulation_steps:.3f} '
+                f'lr:{optimizer.param_groups[-1]["lr"]:.12f} '
+                f'epoch_Time:{spend_time/(step+1)*iter_per_epoch/60 - spend_time/60:.2f}min'
+            )
             if (wandb is not None) and (not ddp or dist.get_rank() == 0):
                 wandb.log({"loss": loss * args.accumulation_steps,
                            "lr": optimizer.param_groups[-1]['lr'],
-                           "epoch_Time": spend_time / (step + 1) * iter_per_epoch // 60 - spend_time // 60})
+                           "epoch_Time": spend_time/(step+1)*iter_per_epoch/60 - spend_time/60})
 
         if (step + 1) % args.save_interval == 0 and (not ddp or dist.get_rank() == 0):
             model.eval()
-            ckp = f'{args.save_dir}/full_sft_{lm_config.hidden_size}.pth'
-            if isinstance(model, torch.nn.parallel.DistributedDataParallel):
+            ckp = f'{args.save_dir}/full_sft_checkpoint.pth'
+            if isinstance(model, DistributedDataParallel):
                 state_dict = model.module.state_dict()
             else:
                 state_dict = model.state_dict()
-            state_dict = {k: v.half() for k, v in state_dict.items()}  
+            state_dict = {k: v.half() for k, v in state_dict.items()}
             torch.save(state_dict, ckp)
             model.train()
 
 
-def init_model(lm_config):
-    tokenizer = AutoTokenizer.from_pretrained('../model')
-    model = AmadeusForCausalLM(lm_config)
-    ckp = f'{args.save_dir}/pretrain_{lm_config.hidden_size}-checkpoint.pth'
-    state_dict = torch.load(ckp, map_location=args.device, weights_only=False)
-    model.load_state_dict(state_dict["model"], strict=False)
-
-    model = model.to(args.device)
-    return model, tokenizer
+def init_model():
+    tokenizer = AutoTokenizer.from_pretrained("HuggingFaceTB/SmolLM2-135M-Instruct")
+    model = AutoModelForCausalLM.from_pretrained("HuggingFaceTB/SmolLM2-135M")
+    return model.to(args.device), tokenizer
 
 
 def init_distributed_mode():
-    if not ddp: return
+    if not ddp:
+        return
     global ddp_local_rank, DEVICE
 
     dist.init_process_group(backend="nccl")
@@ -111,35 +98,34 @@ def init_distributed_mode():
     ddp_local_rank = int(os.environ["LOCAL_RANK"])
     ddp_world_size = int(os.environ["WORLD_SIZE"])
     DEVICE = f"cuda:{ddp_local_rank}"
-    torch.cuda.set_device(DEVICE)
+    torch.cuda.set_device(ddp_local_rank)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Amadeus Full SFT")
+    parser = argparse.ArgumentParser(description="SmolLM2 Full SFT")
     parser.add_argument("--out_dir", type=str, default="../out")
-    parser.add_argument("--epochs", type=int, default=2)
-    parser.add_argument("--batch_size", type=int, default=16)
+    parser.add_argument("--epochs", type=int, default=1)
+    parser.add_argument("--batch_size", type=int, default=10)
     parser.add_argument("--learning_rate", type=float, default=5e-7)
     parser.add_argument("--device", type=str, default="cuda:0" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--dtype", type=str, default="bfloat16")
     parser.add_argument("--use_wandb", action="store_true")
-    parser.add_argument("--wandb_project", type=str, default="MiniMind-Full-SFT")
+    parser.add_argument("--wandb_project", type=str, default="SmolLM2-Full-SFT")
     parser.add_argument("--num_workers", type=int, default=1)
     parser.add_argument("--ddp", action="store_true")
-    parser.add_argument("--accumulation_steps", type=int, default=1)
+    parser.add_argument("--accumulation_steps", type=int, default=8)
     parser.add_argument("--grad_clip", type=float, default=1.0)
     parser.add_argument("--warmup_iters", type=int, default=0)
     parser.add_argument("--log_interval", type=int, default=100)
     parser.add_argument("--save_interval", type=int, default=100)
-    parser.add_argument('--local_rank', type=int, default=-1)
-    parser.add_argument('--hidden_size', default=768, type=int)
-    parser.add_argument('--num_hidden_layers', default=8, type=int)
-    parser.add_argument('--max_seq_len', default=1024, type=int)
+    parser.add_argument("--local_rank", type=int, default=-1)
+    parser.add_argument("--hidden_size", default=768, type=int)
+    parser.add_argument("--num_hidden_layers", default=8, type=int)
+    parser.add_argument("--max_seq_len", default=1024, type=int)
     parser.add_argument("--data_path", type=str, default="../alpaca_cleaned.jsonl")
 
     args = parser.parse_args()
 
-    lm_config = AmadeusConfig(hidden_size=args.hidden_size, num_hidden_layers=args.num_hidden_layers)
     args.save_dir = os.path.join(args.out_dir)
     os.makedirs(args.save_dir, exist_ok=True)
     os.makedirs(args.out_dir, exist_ok=True)
@@ -147,7 +133,7 @@ if __name__ == "__main__":
     device_type = "cuda" if "cuda" in args.device else "cpu"
 
     ctx = nullcontext() if device_type == "cpu" else torch.cuda.amp.autocast()
-    ddp = int(os.environ.get("RANK", -1)) != -1  # is this a ddp run?
+    ddp = int(os.environ.get("RANK", -1)) != -1
     ddp_local_rank, DEVICE = 0, "cuda:0"
     base_seed = 1337
     torch.manual_seed(base_seed)
@@ -160,7 +146,7 @@ if __name__ == "__main__":
         torch.manual_seed(base_seed + rank)
         torch.cuda.manual_seed(base_seed + rank)
 
-    model, tokenizer = init_model(lm_config)
+    model, tokenizer = init_model()
 
     train_ds = SFTDataset(args.data_path, tokenizer, max_length=args.max_seq_len)
     train_sampler = DistributedSampler(train_ds) if ddp else None
