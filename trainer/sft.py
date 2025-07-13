@@ -147,6 +147,7 @@ if __name__ == "__main__":
         torch.cuda.manual_seed(base_seed + rank)
 
     model, tokenizer = init_model()
+    model = torch.compile(model)
 
     train_ds = SFTDataset(args.data_path, tokenizer, max_length=args.max_seq_len)
     train_sampler = DistributedSampler(train_ds) if ddp else None
